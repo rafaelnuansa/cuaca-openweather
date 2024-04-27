@@ -99,35 +99,53 @@ class WeatherScreen extends StatelessWidget {
     );
   }
 
-  Future<Map<String, dynamic>> _getCurrentLocationWeather() async {
-    try {
-      if (!(await Permission.location.status.isGranted)) {
-        await Permission.location.request();
-      }
-
-      // Cek status izin lokasi
-      if (await Permission.location.serviceStatus.isEnabled) {
-        // Lakukan pengambilan lokasi jika izin sudah diberikan dan layanan lokasi diaktifkan
-        Position position = await Geolocator.getCurrentPosition(
-            desiredAccuracy: LocationAccuracy.best); // Get current position
-        final weatherService = WeatherService();
-        final weatherData = await weatherService.fetchWeatherDataByCoordinates(
-            position.latitude,
-            position.longitude); // Fetch weather data by coordinates
-        return {
-          'cityName': weatherData['name'],
-          'temperature': weatherData['main']['temp'],
-          'weather': weatherData['weather'][0]['main']
-        };
-      } else {
-        throw Exception('Location service is disabled');
-      }
-    } catch (e) {
+Future<Map<String, dynamic>> _getCurrentLocationWeather() async {
+  try {
+    // Cek apakah izin lokasi sudah diberikan
+    if (!(await Permission.location.status.isGranted)) {
+      // Jika belum, gunakan koordinat Kota Bogor
+      final weatherService = WeatherService();
+      final weatherData = await weatherService.fetchWeatherDataByCoordinates(
+          -6.595038, 106.816635); // Koordinat Kota Bogor
       return {
-        'cityName': 'Unknown',
-        'temperature': 'Unknown',
-        'weather': 'Unknown'
+        'cityName': weatherData['name'],
+        'temperature': weatherData['main']['temp'],
+        'weather': weatherData['weather'][0]['main']
       };
     }
+
+    // Cek status layanan lokasi
+    if (await Permission.location.serviceStatus.isEnabled) {
+      // Jika diaktifkan, gunakan lokasi saat ini
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.best); // Get current position
+      final weatherService = WeatherService();
+      final weatherData = await weatherService.fetchWeatherDataByCoordinates(
+          position.latitude,
+          position.longitude); // Fetch weather data by coordinates
+      return {
+        'cityName': weatherData['name'],
+        'temperature': weatherData['main']['temp'],
+        'weather': weatherData['weather'][0]['main']
+      };
+    } else {
+      // Jika layanan lokasi dinonaktifkan, gunakan koordinat Kota Bogor
+      final weatherService = WeatherService();
+      final weatherData = await weatherService.fetchWeatherDataByCoordinates(
+          -6.595038, 106.816635); // Koordinat Kota Bogor
+      return {
+        'cityName': weatherData['name'],
+        'temperature': weatherData['main']['temp'],
+        'weather': weatherData['weather'][0]['main']
+      };
+    }
+  } catch (e) {
+    // Handle errors
+    return {
+      'cityName': 'Unknown',
+      'temperature': 'Unknown',
+      'weather': 'Unknown'
+    };
   }
+}
 }
