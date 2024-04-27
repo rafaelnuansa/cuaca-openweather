@@ -8,4 +8,4 @@
   geolocator: ^11.0.0
   http: ^1.2.1
   permission_handler: ^11.3.1
-  weather: ^3.1.1
+  font_awesome_flutter: ^10.7.0
